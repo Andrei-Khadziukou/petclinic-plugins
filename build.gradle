@@ -19,8 +19,6 @@ buildscript {
     }
 
     dependencies {
-        //TODO: uncomment when initial version of petclinic-artifactory plugin is published
-        //classpath("com.epam.petclinic.plugin:petclinic-plugins:${pluginsVersionToUse}")
         classpath("io.spring.gradle:dependency-management-plugin:${dependencyManagementPluginVersion}")
     }
 }
@@ -34,24 +32,21 @@ repositories {
 
 dependencies {
     compile gradleApi()
-    runtime "io.spring.gradle:dependency-management-plugin"
-    compile "org.jacoco:org.jacoco.core:${jacocoVersion}"
-    compile "org.jacoco:org.jacoco.report:${jacocoVersion}"
-}
-
-dependencyManagement {
-    dependencies {
-        dependency "io.spring.gradle:dependency-management-plugin:${dependencyManagementPluginVersion}"
-    }
+    compile("org.jacoco:org.jacoco.core:${jacocoVersion}")
+    compile("org.jacoco:org.jacoco.report:${jacocoVersion}")
+    compile("org.asciidoctor:asciidoctor-gradle-plugin:${asciidoctorPluginVersion}")
+    compile("org.liquibase:liquibase-gradle-plugin:${gradlePluginVersion}")
+    compile("org.postgresql:postgresql:${postgreSqlVersion}")
+    runtime("io.spring.gradle:dependency-management-plugin:${dependencyManagementPluginVersion}")
 }
 
 //TODO: Should be removed after petclinic-artifactory is applied
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId('com.epam.petclinic.plugin')
+            groupId('com.epam.petclinic')
             artifactId(project.archivesBaseName)
-            version("${pluginsVersionToUse}")
+            version("${productVersion}")
             from components.java
         }
     }
