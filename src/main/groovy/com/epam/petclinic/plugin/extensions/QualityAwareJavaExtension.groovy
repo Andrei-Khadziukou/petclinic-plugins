@@ -1,7 +1,7 @@
 package com.epam.petclinic.plugin.extensions
 
 /**
- * Comment here.
+ * Extension for {@link com.epam.petclinic.plugin.QualityAwareJavaPlugin}.
  *
  * Date: 5/17/2017
  *

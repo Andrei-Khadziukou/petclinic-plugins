@@ -1,5 +1,6 @@
 package com.epam.petclinic.plugin
 
+import com.epam.petclinic.plugin.extensions.CodeCoverageExtension
 import com.epam.petclinic.plugin.util.CoverageReportUtil
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -19,13 +20,12 @@ class CodeCoveragePlugin implements Plugin<Project> {
     private static final String JACOCO_PLUGIN_ID = 'jacoco'
     private static final String XML_REPORT_PATH = '/reports/coverage/coverage-report.xml'
 
-    private Map props
     private XmlParser parser
 
     @Override
     void apply(Project project) {
         parser = configureParser()
-        props = getMetricProperties()
+        project.extensions.create(CodeCoverageExtension.NAME, CodeCoverageExtension)
 
         project.plugins.withType(JavaPlugin) {
             addCheckMinimumCoverageTask(project)
@@ -86,12 +86,11 @@ class CodeCoveragePlugin implements Plugin<Project> {
                       'group'      : CODE_COVERAGE_TASK_GROUP],
                 'checkMinimumCoverage').doLast {
             List failures = []
-            File xmlReport = project.file("${project.buildDir}${XML_REPORT_PATH}")
             //check that coverage rate is not less acceptable
-            parseCoverageReport(xmlReport).each { metric ->
-                if (metric.value < (props.metrics[metric.key] as double)) {
+            parseCoverageReport(project).each { metric ->
+                if (metric.value < (project.codeCoverage.metrics[metric.key] as double)) {
                     failures.add("${metric.key} coverage rate is: ${metric.value}%, " +
-                            "minimum is ${props.metrics[metric.key]}%")
+                            "minimum is ${project.codeCoverage.metrics[metric.key]}%")
                 }
             }
             if (failures) {
@@ -112,7 +111,8 @@ class CodeCoveragePlugin implements Plugin<Project> {
      * @param xmlReport coverage report to parse
      * @return percentage coverage metrics of project
      */
-    private Map parseCoverageReport(File xmlReport) {
+    private Map parseCoverageReport(Project project) {
+        File xmlReport = project.file("${project.buildDir}${XML_REPORT_PATH}")
         if (xmlReport.exists()) {
             Map reportMetrics = [:]
 
@@ -134,7 +134,7 @@ class CodeCoveragePlugin implements Plugin<Project> {
             Node parseResults = parser.parse(xmlReport)
 
             //find and calculate every metric in coverage report
-            props.metrics.each { metric ->
+            project.codeCoverage.metrics.each { metric ->
                 reportMetrics << [(metric.key): (percentage(parseResults.counter.find {
                     //see structure of JaCoCo xml coverage report
                     it.@type == metric.key.toUpperCase()
@@ -157,19 +157,5 @@ class CodeCoveragePlugin implements Plugin<Project> {
         parser.setFeature('http://apache.org/xml/features/nonvalidating/load-external-dtd', false)
         parser.setFeature('http://apache.org/xml/features/disallow-doctype-decl', false)
         return parser
-    }
-
-    private Map getMetricProperties() {
-        return [
-                metrics: [
-                        instruction: 0,
-                        branch     : 25,
-                        line       : 50,
-                        complexity : 0,
-                        method     : 40,
-                        //set this to 0 if you want to switch off minimum coverage check
-                        class      : 50
-                ]
-        ]
     }
 }
