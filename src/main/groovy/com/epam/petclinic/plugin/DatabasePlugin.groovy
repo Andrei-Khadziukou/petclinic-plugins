@@ -59,8 +59,8 @@ class DatabasePlugin implements Plugin<Project> {
                     changeLogFile("${RESOURCE_FOLDER}${project.changeLogPath}")
                     url("${JDBC_URL}${project.databaseName}")
                     defaultSchemaName(project.schemaName)
-                    username(project.username)
-                    password(project.password)
+                    username(project.dbAdminName)
+                    password(project.dbAdminPassword)
                 }
             }
         }
@@ -76,23 +76,24 @@ class DatabasePlugin implements Plugin<Project> {
                       group      : DATABASE_TASK_GROUP],
                 CREATE_DATABASE) {
             doLast {
-                String createUserQuery = "create user ${project.username}"
+                String createUserQuery = "create user ${project.dbAdminName}"
                 Sql.withInstance(JDBC_URL, project.admin, project.password, POSTGRES_DRIVER, { Sql sql ->
                     sql.execute(createUserQuery)
                 })
 
-                String createUserPasswordQuery = "alter user ${project.username} password \'${project.password}\'"
+                String createUserPasswordQuery = "alter user ${project.dbAdminName} password " +
+                        "\'${project.dbAdminPassword}\'"
                 Sql.withInstance(JDBC_URL, project.admin, project.password, POSTGRES_DRIVER, { Sql sql ->
                     sql.execute(createUserPasswordQuery)
                 })
 
-                String createDbQuery = "create database ${project.databaseName} owner ${project.username}"
+                String createDbQuery = "create database ${project.databaseName} owner ${project.dbAdminName}"
                 Sql.withInstance(JDBC_URL, project.admin, project.password, POSTGRES_DRIVER, { Sql sql ->
                     sql.execute(createDbQuery)
                 })
 
                 String createSchemaQuery = "create schema if not exists " +
-                        "${project.schemaName} authorization ${project.username}"
+                        "${project.schemaName} authorization ${project.dbAdminName}"
                 Sql.withInstance("${JDBC_URL}${project.databaseName}", project.admin, project.password, POSTGRES_DRIVER,
                         { Sql sql ->
                             sql.execute(createSchemaQuery)
@@ -109,7 +110,7 @@ class DatabasePlugin implements Plugin<Project> {
                     sql.execute(dropDatabaseQuery)
                 })
 
-                String dropUserQuery = "drop user if exists ${project.username}"
+                String dropUserQuery = "drop user if exists ${project.dbAdminName}"
                 Sql.withInstance(JDBC_URL, project.admin, project.password, POSTGRES_DRIVER, { Sql sql ->
                     sql.execute(dropUserQuery)
                 })
