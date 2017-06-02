@@ -20,7 +20,6 @@ class DatabasePlugin implements Plugin<Project> {
     private static final String JDBC_URL = 'jdbc:postgresql://localhost:5432/'
     private static final String CREATE_DATABASE = 'createDatabase'
     private static final String DROP_DATABASE = 'dropDatabase'
-    private static final String RESOURCE_FOLDER = 'src/main/resources/'
 
     @Override
     void apply(Project project) {
@@ -56,7 +55,7 @@ class DatabasePlugin implements Plugin<Project> {
         project.liquibase {
             activities {
                 main {
-                    changeLogFile("${RESOURCE_FOLDER}${project.changeLogPath}")
+                    changeLogFile("${project.changeLogPath}")
                     url("${JDBC_URL}${project.databaseName}")
                     defaultSchemaName(project.schemaName)
                     username(project.dbAdminName)
